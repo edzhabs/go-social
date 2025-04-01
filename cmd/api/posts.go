@@ -13,7 +13,7 @@ import (
 
 type postKey string
 
-const postCtx postKey = "posts"
+const postCtx postKey = "post"
 
 type CreatePostPayload struct {
 	Title   string   `json:"title" validate:"required,max=100"`
@@ -116,6 +116,7 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 
 	if err := app.store.Posts.Delete(r.Context(), post.ID); err != nil {
 		app.internalServerError(w, r, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
