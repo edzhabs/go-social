@@ -1,19 +1,22 @@
 package main
 
 import (
-	"log"
-
 	"github.com/edzhabs/social/internal/db"
 	"github.com/edzhabs/social/internal/env"
 	"github.com/edzhabs/social/internal/store"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 const version = "0.0.1"
 
 func main() {
+	// Logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
+
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Error("Error loading .env file")
 	}
 
 	cfg := config{
@@ -27,6 +30,7 @@ func main() {
 		env: env.GetString("ENV", "development"),
 	}
 
+	// Database
 	db, err := db.New(
 		cfg.db.addr,
 		cfg.db.maxOpenConns,
@@ -34,18 +38,19 @@ func main() {
 		cfg.db.maxIdleTime,
 	)
 	if err != nil {
-		log.Panic(err)
+		logger.Fatal(err)
 	}
 	defer db.Close()
-	log.Println("database connection pool established")
+	logger.Info("database connection pool established")
 
 	store := store.NewStorage(db)
 	app := &application{
 		config: cfg,
 		store:  store,
+		logger: logger,
 	}
 
 	mux := app.mount()
 
-	log.Fatal(app.run(mux))
+	logger.Fatal(app.run(mux))
 }
