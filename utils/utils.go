@@ -1,37 +1,13 @@
 package utils
 
 import (
-	"encoding/json"
-	"net/http"
+	"crypto/sha256"
+	"encoding/hex"
 )
 
-func WriteJSON(w http.ResponseWriter, status int, data any) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	return json.NewEncoder(w).Encode(data)
-}
+func HashToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	hashToken := hex.EncodeToString(hash[:])
 
-func ReadJSON(w http.ResponseWriter, r *http.Request, data any) error {
-	maxBytes := 1_048_578 // 1mb
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
-
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-
-	return decoder.Decode(data)
-}
-
-func ErrorJSON(w http.ResponseWriter, status int, message string) error {
-	type envelope struct {
-		Error string `json:"error"`
-	}
-
-	return WriteJSON(w, status, &envelope{Error: message})
-}
-
-func ResponseJSON(w http.ResponseWriter, status int, data any) error {
-	type envelope struct {
-		Data any `json:"data"`
-	}
-	return WriteJSON(w, status, &envelope{data})
+	return hashToken
 }

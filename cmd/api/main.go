@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/edzhabs/social/internal/db"
 	"github.com/edzhabs/social/internal/env"
 	"github.com/edzhabs/social/internal/store"
@@ -28,6 +30,9 @@ func main() {
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 		env: env.GetString("ENV", "development"),
+		mail: mail{
+			expiry: time.Hour * 24 * 3,
+		},
 	}
 
 	// Database
