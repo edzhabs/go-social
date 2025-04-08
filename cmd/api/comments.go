@@ -24,13 +24,14 @@ func (app *application) postCommentHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	post := getPostFromCtx(r)
+	post := app.getPostFromCtx(r)
+
+	user := app.getUserFromCtx(r)
 
 	comment := &store.Comment{
 		PostID:  post.ID,
 		Content: payload.Content,
-		// TODO after auth
-		UserID: 669,
+		UserID:  user.ID,
 	}
 
 	ctx := r.Context()

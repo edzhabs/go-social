@@ -24,27 +24,21 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type FollowUser struct {
-	UserID int64 `json:"user_id" validate:"required"`
-}
-
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followedUser := app.getUserFromCtx(r)
+	currentUser := app.getUserFromCtx(r)
 
-	// TODO: revert back to auth from ctx
-	var payload FollowUser
-
-	if err := utils.ReadJSON(w, r, &payload); err != nil {
-		app.badRequestResponse(w, r, err)
+	followerID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		app.internalServerError(w, r, err)
 		return
 	}
 
-	if followedUser.ID == payload.UserID {
+	if currentUser.ID == followerID {
 		app.badRequestResponse(w, r, errors.New("cannot follow own user_id"))
 		return
 	}
 
-	if err := app.store.Followers.Follow(r.Context(), followedUser.ID, payload.UserID); err != nil {
+	if err := app.store.Followers.Follow(r.Context(), currentUser.ID, followerID); err != nil {
 		switch err {
 		case store.ErrConflict:
 			app.conflictResponse(w, r, err)
@@ -58,17 +52,15 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	followedUser := app.getUserFromCtx(r)
+	currentUser := app.getUserFromCtx(r)
 
-	// TODO: revert back to auth from ctx
-	var payload FollowUser
-
-	if err := utils.ReadJSON(w, r, &payload); err != nil {
+	followerID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err := app.store.Followers.Unfollow(r.Context(), followedUser.ID, payload.UserID); err != nil {
+	if err := app.store.Followers.Unfollow(r.Context(), currentUser.ID, followerID); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

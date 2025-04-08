@@ -7,7 +7,7 @@ import (
 
 func GetString(key, fallback string) string {
 	val, ok := os.LookupEnv(key)
-	if !ok {
+	if val == "" || !ok {
 		return fallback
 	}
 
