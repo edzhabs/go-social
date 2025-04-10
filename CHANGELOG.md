@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/edzhabs/go-social/compare/v1.0.0...v1.1.0) (2025-04-10)
+
+
+### Features
+
+* update api version automatically ([cd026c9](https://github.com/edzhabs/go-social/commit/cd026c99d738615c47047b191444d4612af1a74f))
+
 ## 1.0.0 (2025-04-10)
 
 
