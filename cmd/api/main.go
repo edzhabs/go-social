@@ -8,6 +8,8 @@ import (
 	"github.com/edzhabs/social/internal/env"
 	"github.com/edzhabs/social/internal/mailer"
 	"github.com/edzhabs/social/internal/store"
+	"github.com/edzhabs/social/internal/store/cache"
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -30,6 +32,12 @@ func main() {
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+		},
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PW", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", false),
 		},
 		fontendURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
 		env:        env.GetString("ENV", "development"),
@@ -69,7 +77,14 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
-	store := store.NewStorage(db)
+	// Cache Redis
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis cache connection established")
+
+		defer rdb.Close()
+	}
 
 	// mailer := mailer.NewSendGrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 	mailTrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
@@ -83,9 +98,13 @@ func main() {
 		cfg.auth.token.iss,
 	)
 
+	store := store.NewStorage(db)
+	cacheStorage := cache.NewRedisStorage(rdb)
+
 	app := &application{
 		config:        cfg,
 		store:         store,
+		cache:         cacheStorage,
 		logger:        logger,
 		mailer:        mailTrap,
 		authenticator: jwtAuthenticator,
