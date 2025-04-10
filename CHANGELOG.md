@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/edzhabs/go-social/compare/v1.1.0...v1.1.1) (2025-04-10)
+
+
+### Bug Fixes
+
+* branch name on update-api-version script ([5b4d79b](https://github.com/edzhabs/go-social/commit/5b4d79be6917f8f77406545c44c8343dd214b528))
+
 ## [1.1.0](https://github.com/edzhabs/go-social/compare/v1.0.0...v1.1.0) (2025-04-10)
 
 
