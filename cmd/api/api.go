@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/edzhabs/social/internal/auth"
+	"github.com/edzhabs/social/internal/env"
 	"github.com/edzhabs/social/internal/mailer"
 	"github.com/edzhabs/social/internal/ratelimiter"
 	"github.com/edzhabs/social/internal/store"
@@ -89,19 +90,18 @@ type dbConfig struct {
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedOrigins:   []string{env.GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5173")},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
-
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
 
 	if app.config.rateLimiter.Enabled {
 		r.Use(app.RateLimiterMiddleware)
