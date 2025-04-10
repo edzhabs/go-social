@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/edzhabs/go-social/compare/v1.1.1...v1.1.2) (2025-04-10)
+
+
+### Bug Fixes
+
+* sed command on update api version script ([63596b4](https://github.com/edzhabs/go-social/commit/63596b4d6091746972043160cc59fb160df1f564))
+
 ## [1.1.1](https://github.com/edzhabs/go-social/compare/v1.1.0...v1.1.1) (2025-04-10)
 
 
