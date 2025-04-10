@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const version = "1.1.1"
+const version = "1.1.2"
 
 func main() {
 	// Logger
