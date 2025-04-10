@@ -7,6 +7,7 @@ import (
 	"github.com/edzhabs/social/internal/db"
 	"github.com/edzhabs/social/internal/env"
 	"github.com/edzhabs/social/internal/mailer"
+	"github.com/edzhabs/social/internal/ratelimiter"
 	"github.com/edzhabs/social/internal/store"
 	"github.com/edzhabs/social/internal/store/cache"
 	"github.com/go-redis/redis/v8"
@@ -38,6 +39,11 @@ func main() {
 			pw:      env.GetString("REDIS_PW", ""),
 			db:      env.GetInt("REDIS_DB", 0),
 			enabled: env.GetBool("REDIS_ENABLED", false),
+		},
+		rateLimiter: ratelimiter.Config{
+			RequestPerTimeFrame: env.GetInt("RATELIMITER_REQUEST_COUNT", 20),
+			TimeFrame:           time.Second * 5,
+			Enabled:             env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 		fontendURL: env.GetString("FRONTEND_URL", "http://localhost:5173"),
 		env:        env.GetString("ENV", "development"),
@@ -86,6 +92,13 @@ func main() {
 		defer rdb.Close()
 	}
 
+	// ratelimiter
+
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.rateLimiter.RequestPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
+
 	// mailer := mailer.NewSendGrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
 	mailTrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
 	if err != nil {
@@ -108,6 +121,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailTrap,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   rateLimiter,
 	}
 
 	mux := app.mount()

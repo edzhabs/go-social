@@ -11,6 +11,7 @@ import (
 
 	"github.com/edzhabs/social/internal/auth"
 	"github.com/edzhabs/social/internal/mailer"
+	"github.com/edzhabs/social/internal/ratelimiter"
 	"github.com/edzhabs/social/internal/store"
 	"github.com/edzhabs/social/internal/store/cache"
 	"github.com/go-chi/chi/v5"
@@ -26,16 +27,18 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	rateLimiter   ratelimiter.Limiter
 }
 
 type config struct {
-	addr       string
-	db         dbConfig
-	env        string
-	mail       mailConfig
-	fontendURL string
-	auth       authConfig
-	redisCfg   redisConfig
+	addr        string
+	db          dbConfig
+	env         string
+	mail        mailConfig
+	fontendURL  string
+	auth        authConfig
+	redisCfg    redisConfig
+	rateLimiter ratelimiter.Config
 }
 
 type redisConfig struct {
@@ -100,14 +103,17 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	if app.config.rateLimiter.Enabled {
+		r.Use(app.RateLimiterMiddleware)
+	}
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.With(app.BasicAuthMiddleware()).
-			Get("/health", app.healthCheckHandler)
+		// r.With(app.BasicAuthMiddleware()).
+		r.Get("/health", app.healthCheckHandler)
 
 		r.Route("/posts", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
