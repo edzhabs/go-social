@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/edzhabs/go-social/compare/v1.1.2...v1.2.0) (2025-04-11)
+
+
+### Features
+
+* dockerfile and local port ([de2705d](https://github.com/edzhabs/go-social/commit/de2705d6d5df1d8c453c313578a4f9f678182cca))
+
 ## [1.1.2](https://github.com/edzhabs/go-social/compare/v1.1.1...v1.1.2) (2025-04-10)
 
 
